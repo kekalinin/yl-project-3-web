@@ -183,3 +183,29 @@ def photo_del(id):
     s.commit()
     flash('Фотография удалена')
     return redirect(url_for('index'))
+
+
+@app.route('/photos/tags/<tag>')
+def tags(tag):
+    """
+    Показывает фотографии с тэгом.
+    """
+    s = db_session.create_session()
+    t = s.query(models.Tag).filter(models.Tag.name == tag).first()
+    return render_template('tag.html', tag=tag, photos=t.photos)
+
+
+@app.route('/photos/user/<login>')
+def photo_from_user(login):
+    """
+    Показывает фотографии, созданные указанным пользователем.
+    """
+    s = db_session.create_session()
+    usr = s.query(models.User).filter(models.User.login == login).first()
+    if not usr:
+        abort(404)
+    q = s.query(models.Photo).filter(models.Photo.user == usr)
+    if not current_user.is_authenticated:
+        q = q.filter(models.Photo.is_private.is_(False))
+    photos = q.all()
+    return render_template('photo_from_user.html', login=login, photos=photos)
