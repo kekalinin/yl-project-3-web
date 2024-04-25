@@ -17,10 +17,10 @@
                     {% endif %}
                 </h6>
                 <p class="card-text">
-                    Автор: {{ p.user.username }}
+                    Автор: <a href="{{ url_for('photo_from_user', login=p.user.login) }}">{{ p.user.username }}</a>
                 </p>
                 {% for tag in p.tags %}
-                <a href="/tags/{{ tag.name }}" class="card-link">{{ tag.name }}</a>
+                <a href="{{ url_for('tags', tag=tag.name) }}" class="card-link">{{ tag.name }}</a>
                 {% endfor %}
             </div>
         </div>

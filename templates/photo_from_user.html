@@ -1,0 +1,26 @@
+{% extends "base.html" %}
+
+{% block content %}
+<h2>Фотографии пользователя: {{ login }}</h2>
+
+{% for p in photos %}
+<div class="card mb-3" style="max-width: 18rem;">
+    <div class="card-body">
+        <h5 class="card-title">
+            <a href="{{ url_for('photo', id=p.id) }}">{{ p.title }}</a>
+        </h5>
+        <h6 class="card-subtitle mb-2 text-body-secondary">
+            Добавлено: {{ p.created_dt.strftime('%d-%m-%Y %H:%M') }}
+        </h6>
+        <p class="card-text">
+            Автор: {{ p.user.username }}
+        </p>
+        {% for tag in p.tags %}
+        <a href="{{ url_for('tags', tag=tag.name) }}" class="card-link">{{ tag.name }}</a>
+        {% endfor %}
+    </div>
+</div>
+{% endfor %}
+
+<p>Всего фотографий: {{ photos | length }}</p>
+{% endblock %}

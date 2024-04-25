@@ -8,7 +8,7 @@
 <p>
     Тэги:
     {% for tag in photo.tags %}
-    <a href="/tags/{{ tag.name }}" class="card-link">{{ tag.name }}</a>
+    <a href="{{ url_for('tags', tag=tag.name) }}" class="card-link">{{ tag.name }}</a>
     {% endfor %}
 </p>
 
