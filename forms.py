@@ -1,6 +1,6 @@
 import sqlalchemy
 from flask_wtf import FlaskForm
-from wtforms import StringField, PasswordField, SubmitField, BooleanField
+from wtforms import StringField, PasswordField, SubmitField, BooleanField, FileField
 from wtforms.validators import DataRequired, EqualTo
 from wtforms.validators import ValidationError
 
@@ -33,3 +33,14 @@ class LoginForm(FlaskForm):
     password = PasswordField('Пароль', validators=[DataRequired()])
     remember_me = BooleanField('Запомнить меня')
     submit = SubmitField('Войти')
+
+
+class NewPhotoForm(FlaskForm):
+    """
+    Форма новой фотографии
+    """
+    title = StringField('Название', validators=[DataRequired()])
+    content = FileField('Путь к фотографии', validators=[DataRequired()])
+    is_private = BooleanField('Приватное')
+    tags = StringField('Тэги (через пробел)')
+    submit = SubmitField('Добавить')

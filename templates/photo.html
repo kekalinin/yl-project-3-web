@@ -1,0 +1,21 @@
+{% extends "base.html" %}
+
+{% block content %}
+<h2>{{ photo.title }} </h2>
+<p>
+    Автор: {{ photo.user.username }} / {{ photo.created_dt.strftime('%d-%m-%Y %H:%M') }}
+</p>
+<p>
+    Тэги:
+    {% for tag in photo.tags %}
+    <a href="/tags/{{ tag.name }}" class="card-link">{{ tag.name }}</a>
+    {% endfor %}
+</p>
+
+<img class="img-fluid" src="data:image/png;base64,{{ img64 }}"/>
+
+{% if photo.user.id == current_user.id %}
+<a class="btn btn-danger" href="{{ url_for('photo_del', id=photo.id) }}" role="button">Удалить</a>
+{% endif %}
+
+{% endblock %}

@@ -1,16 +1,20 @@
+import base64
+
 from flask import (
     Flask,
     render_template,
     redirect,
     url_for,
-    flash
+    flash,
+    request,
+    abort
 )
 from flask_login import (
     logout_user,
     LoginManager,
     login_user,
     current_user,
-    # login_required
+    login_required
 )
 
 import db_session
@@ -37,8 +41,21 @@ def load_user(id):
 
 @app.route('/')
 def index():
-    return render_template("index.html")
+    """
+    Главная страница
+    """
+    s = db_session.create_session()
+    q = s.query(models.Photo)
+    if not current_user.is_authenticated:
+        q = q.filter(models.Photo.is_private.is_(False))
+    photos = q.order_by(
+        models.Photo.created_dt.desc()).limit(10).all()
+    return render_template('index.html', photos=photos)
 
+
+#
+# Работа с пользователем
+#
 
 @app.route('/register', methods=['GET', 'POST'])
 def register():
@@ -86,4 +103,83 @@ def logout():
     Выход пользователя
     """
     logout_user()
+    return redirect(url_for('index'))
+
+
+#
+# Фотографии
+#
+
+def get_or_create(session, model, **kwargs):
+    """
+    Находит в БД указанные объект или создает его, если не найдено.
+    """
+    instance = session.query(model).filter_by(**kwargs).first()
+    if instance:
+        return instance
+    else:
+        instance = model(**kwargs)
+        session.add(instance)
+        session.commit()
+        return instance
+
+
+@app.route('/photos/add', methods=['GET', 'POST'])
+@login_required
+def photo_add():
+    """
+    Добавление фотографий пользователя
+    """
+    form = forms.NewPhotoForm()
+    if form.validate_on_submit():
+        image = request.files[form.content.name].read()
+        p = models.Photo(
+            title=form.title.data,
+            content=image,
+            is_private=form.is_private.data,
+            user_id=current_user.id,
+        )
+        s = db_session.create_session()
+        tags = []
+        for tag in form.tags.data.split(' '):
+            tags.append(get_or_create(s, models.Tag, name=tag))
+        p.tags = tags
+        s.add(p)
+        s.commit()
+        flash('Фотография добавлена')
+        return redirect(url_for('index'))
+    return render_template('photo_add.html', title='Новая фотка', form=form)
+
+
+@app.route('/photos/<id>')
+def photo(id):
+    """
+    Показывает фотографию с указанным номером
+    """
+    s = db_session.create_session()
+
+    q = s.query(models.Photo)
+    if not current_user.is_authenticated:
+        q = q.filter(models.Photo.is_private.is_(False))
+    p = q.filter(models.Photo.id == id).first()
+    # если не нашли фотографию, возвращаем ошибку 404
+    if not p:
+        abort(404)
+    img64 = base64.b64encode(p.content).decode('utf-8')
+    return render_template('photo.html', photo=p, img64=img64)
+
+
+@app.route('/photos/del/<id>')
+@login_required
+def photo_del(id):
+    """
+    Удаление фотографии пользователя
+    """
+    s = db_session.create_session()
+    p = s.query(models.Photo).filter(models.Photo.id == id).first()
+    if p.user.id != current_user.id:
+        abort(403)
+    s.delete(p)
+    s.commit()
+    flash('Фотография удалена')
     return redirect(url_for('index'))

@@ -1,7 +1,38 @@
 {% extends "base.html" %}
 
 {% block content %}
-<h1>
-    Добро пожаловать!
-</h1>
+<h2>Последние фотографии:</h2>
+
+<div class="row row-cols-1 row-cols-sm-2 row-cols-md-3 g-3">
+    {% for p in photos %}
+    <div class="col">
+        <div class="card mb-3 shadow-sm" style="max-width: 18rem;">
+            <div class="card-body">
+                <h5 class="card-title">
+                    <a href="{{ url_for('photo', id=p.id) }}">{{ p.title }}</a>
+                </h5>
+                <h6 class="card-subtitle mb-2 text-body-secondary">
+                    Добавлено: {{ p.created_dt.strftime('%d-%m-%Y %H:%M') }}
+                    {% if p.is_private %} | <i> приватное </i>
+                    {% endif %}
+                </h6>
+                <p class="card-text">
+                    Автор: {{ p.user.username }}
+                </p>
+                {% for tag in p.tags %}
+                <a href="/tags/{{ tag.name }}" class="card-link">{{ tag.name }}</a>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+    {% endfor %}
+</div>
+
+<p>Всего фотографий: {{ photos | length }}</p>
+<div>
+    <p>
+        <a class="btn btn-primary" href="{{ url_for('photo_add') }}">Добавить фото</a>
+    </p>
+</div>
+
 {% endblock %}
